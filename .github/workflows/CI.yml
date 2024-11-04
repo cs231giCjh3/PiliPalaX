@@ -238,4 +238,5 @@ jobs:
           name: Release ${{ needs.update_version.outputs.new_version }}
           files: |
             my-flutter-app_${{ needs.update_version.outputs.new_version }}_amd64.deb
-            build/my-flutter-app-${{ needs.update_version
+            build/my-flutter-app-${{ needs.update_version.outputs.new_version }}.AppImage
+
