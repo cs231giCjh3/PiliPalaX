@@ -1,0 +1,69 @@
+name: Linux Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.2
+
+      - name: Install Dependencies
+        run: |
+          # Install fpm and appimagetool
+          sudo apt-get update
+          sudo apt-get install -y ruby-dev build-essential
+          sudo gem install --no-document fpm
+          sudo apt-get install -y appimagetool
+          # Install Flutter dependencies
+          flutter pub get
+
+      - name: Get Version
+        id: version
+        run: |
+          echo "version=$(grep 'version:' pubspec.yaml | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: Update pubspec.yaml
+        run: |
+          sed -i "s/version: .*/version: ${{ env.version }}/g" pubspec.yaml
+
+      - name: Build Linux .deb Package
+        run: |
+          flutter build linux --release
+          mkdir -p build/deb
+          cp build/linux/release/bundle/myapp /usr/bin/myapp
+          fpm -s dir -t deb -n myapp -v ${{ env.version }} --description "My Flutter App" --license MIT -C /usr/bin myapp
+          mv myapp*.deb build/deb/
+
+      - name: Build AppImage
+        run: |
+          mkdir -p build/appimage
+          cp build/linux/release/bundle/myapp /usr/bin/myapp
+          appimagetool build/linux/release/bundle/ build/appimage/myapp-${{ env.version }}.AppImage
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Linux Artifacts
+          path: |
+            build/deb/*.deb
+            build/appimage/*.AppImage
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ env.version }}
+          name: Release ${{ env.version }}
+          body: "This release contains the latest .deb and AppImage packages."
+          artifacts: |
+            build/deb/*.deb
+            build/appimage/*.AppImage
+          token: ${{ secrets.GITHUB_TOKEN }}
