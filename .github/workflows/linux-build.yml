@@ -22,7 +22,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ruby-dev build-essential
           sudo gem install --no-document fpm
-          #sudo apt-get install -y appimagetool
+        # sudo apt-get install -y appimagetool
           # Install Flutter dependencies
           flutter pub get
 
@@ -43,11 +43,11 @@ jobs:
           fpm -s dir -t deb -n myapp -v ${{ env.version }} --description "My Flutter App" --license MIT -C /usr/bin myapp
           mv myapp*.deb build/deb/
 
-      #- name: Build AppImage
-      # run: |
-      #    mkdir -p build/appimage
-      #    cp build/linux/release/bundle/myapp /usr/bin/myapp
-      #    appimagetool build/linux/release/bundle/ build/appimage/myapp-${{ env.version }}.AppImage
+     # - name: Build AppImage
+     #  run: |
+     #    mkdir -p build/appimage
+     #    cp build/linux/release/bundle/myapp /usr/bin/myapp
+     #    appimagetool build/linux/release/bundle/ build/appimage/myapp-${{ env.version }}.AppImage
 
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v3
@@ -55,7 +55,7 @@ jobs:
           name: Linux Artifacts
           path: |
             build/deb/*.deb
-          #  build/appimage/*.AppImage
+      #     build/appimage/*.AppImage
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
